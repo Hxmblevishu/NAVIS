@@ -1,0 +1,1992 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>NAVIS Voice Assistant</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+
+        min-height: 100vh;
+
+        padding: 24px;
+
+        display: flex;
+
+        justify-content: center;
+
+        align-items: center;
+
+        font-family: Arial, sans-serif;
+
+        background: #101827;
+
+        color: #f8fafc;
+      }
+
+      .container {
+        width: 100%;
+
+        max-width: 560px;
+
+        padding: 28px;
+
+        background: #1e293b;
+
+        border: 1px solid #334155;
+
+        border-radius: 18px;
+      }
+
+      h1 {
+        margin-top: 0;
+
+        text-align: center;
+
+        letter-spacing: 3px;
+
+        color: #38bdf8;
+      }
+
+      .subtitle {
+        text-align: center;
+
+        color: #cbd5e1;
+
+        line-height: 1.6;
+      }
+
+      .status {
+        margin: 24px 0;
+
+        padding: 18px;
+
+        border-radius: 10px;
+
+        background: #0f172a;
+
+        text-align: center;
+
+        line-height: 1.6;
+
+        overflow-wrap: anywhere;
+      }
+
+      .buttons {
+        display: flex;
+
+        gap: 12px;
+
+        margin-bottom: 20px;
+      }
+
+      .question-form {
+        display: grid;
+
+        grid-template-columns: minmax(0, 1fr) auto;
+
+        gap: 10px;
+
+        margin: 20px 0;
+      }
+
+      .question-form label {
+        grid-column: 1 / -1;
+
+        color: #cbd5e1;
+
+        line-height: 1.5;
+      }
+
+      .question-form input {
+        min-width: 0;
+
+        padding: 13px;
+
+        border: 1px solid #475569;
+
+        border-radius: 9px;
+
+        background: #0f172a;
+
+        color: #f8fafc;
+
+        font-size: 16px;
+      }
+
+      .question-form button {
+        background: #a7f3d0;
+
+        color: #064e3b;
+      }
+
+      button {
+        flex: 1;
+
+        min-width: 0;
+
+        padding: 13px;
+
+        border: 0;
+
+        border-radius: 9px;
+
+        font-size: 15px;
+
+        font-weight: bold;
+
+        cursor: pointer;
+      }
+
+      #startBtn {
+        background: #38bdf8;
+
+        color: #082f49;
+      }
+
+      #stopBtn {
+        background: #ef4444;
+
+        color: white;
+      }
+
+      #testBtn {
+        background: #a7f3d0;
+
+        color: #064e3b;
+      }
+
+      #hazardBtn {
+        background: #fbbf24;
+        color: #422006;
+      }
+
+      #clearConversationBtn {
+        background: #c4b5fd;
+
+        color: #2e1065;
+      }
+
+      select {
+        padding: 10px;
+
+        border: 1px solid #475569;
+
+        border-radius: 8px;
+
+        background: #0f172a;
+
+        color: #f8fafc;
+
+        font-size: 15px;
+      }
+
+      button:disabled {
+        opacity: 0.45;
+
+        cursor: not-allowed;
+      }
+
+      .diagnostics {
+        margin: 20px 0;
+
+        padding: 16px;
+
+        border-radius: 10px;
+
+        background: #0f172a;
+
+        line-height: 1.6;
+      }
+
+      .diagnostics p {
+        margin: 7px 0;
+
+        overflow-wrap: anywhere;
+      }
+
+      .diagnostics strong {
+        color: #7dd3fc;
+      }
+
+      #errorMessage {
+        color: #fca5a5;
+      }
+
+      .camera-panel {
+        margin: 20px 0;
+
+        padding: 16px;
+
+        border-radius: 10px;
+
+        background: #0f172a;
+
+        line-height: 1.6;
+      }
+
+      .camera-panel video {
+        display: block;
+
+        width: 100%;
+
+        max-height: 320px;
+
+        margin-top: 12px;
+
+        border-radius: 8px;
+
+        background: #020617;
+
+        object-fit: contain;
+      }
+
+      .instructions {
+        padding: 15px;
+
+        border-radius: 10px;
+
+        background: #334155;
+
+        font-size: 14px;
+
+        line-height: 1.8;
+
+        color: #e2e8f0;
+      }
+
+      #lastQuestion {
+        margin-top: 16px;
+
+        overflow-wrap: anywhere;
+
+        color: #bae6fd;
+      }
+
+      #lastResponse {
+        overflow-wrap: anywhere;
+
+        color: #bbf7d0;
+
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="container" data-recognition-locale="{{ speech_locale }}">
+      <h1>NAVIS</h1>
+
+      <p class="subtitle">Voice-Interactive Assistive Companion</p>
+
+      <div id="status" class="status" role="status" aria-live="polite">
+        Press Start Listening to begin.
+      </div>
+
+      <div class="buttons">
+        <button id="startBtn">Start Listening</button>
+
+        <button id="stopBtn" disabled>Stop</button>
+
+        <button id="testBtn">Test Speech</button>
+      </div>
+
+      <form id="questionForm" class="question-form">
+        <label for="questionInput"
+          >Or type a question if Chrome speech recognition is
+          unavailable.</label
+        >
+
+        <input
+          id="questionInput"
+          type="text"
+          maxlength="2000"
+          autocomplete="off"
+          placeholder="Ask NAVIS a question"
+        />
+
+        <button id="sendQuestionBtn" type="submit" disabled>Ask</button>
+      </form>
+
+      <div class="buttons">
+        <label for="languageSelector">Speech language</label>
+
+        <select id="languageSelector">
+          <option value="en-IN" {% if speech_locale == "en-IN" %}selected{% endif %}>
+            English (India)
+          </option>
+
+          <option value="hi-IN" {% if speech_locale == "hi-IN" %}selected{% endif %}>
+            Hindi (India)
+          </option>
+        </select>
+
+        <button id="clearConversationBtn" type="button">
+          Clear Conversation
+        </button>
+      </div>
+
+      <section class="camera-panel" aria-label="Laptop camera">
+        <strong>Camera view</strong>
+
+        <p id="cameraStatus">
+          Camera is off. Enable it before asking about your surroundings.
+        </p>
+
+        <p>
+          Hazard alert: <strong id="hazardStatus">Idle</strong>
+        </p>
+
+        <strong>Hazard monitoring and voice alerts</strong>
+        <p>
+          Enable the camera, then start monitoring to hear local obstacle alerts.
+          While a hazard alert or description is speaking, say “Stop” to stop
+          the speech and hazard monitoring. Say “Hazard” to start monitoring.
+        </p>
+
+        <div class="buttons">
+          <button id="cameraBtn" type="button">Enable Camera</button>
+          <button id="hazardBtn" type="button" disabled>
+            Start Hazard Monitoring
+          </button>
+        </div>
+
+        <div class="buttons">
+          <button id="describeBtn" type="button" disabled>
+            Describe Surroundings
+          </button>
+          <button id="describeHazardsBtn" type="button" disabled>
+            Describe Hazards
+          </button>
+        </div>
+
+        <video
+          id="cameraPreview"
+          autoplay
+          muted
+          playsinline
+          aria-label="Live laptop camera preview"
+        ></video>
+      </section>
+
+      <section class="diagnostics" aria-label="Voice diagnostics">
+        <p>State: <strong id="currentState">IDLE</strong></p>
+
+        <p>
+          Microphone / recognition:
+          <span id="recognitionStatus">Not started</span>
+        </p>
+
+        <p>Latest transcript: <span id="latestTranscript">None</span></p>
+
+        <p>
+          Listening mode: <span id="detectedWakeWord">Direct questions</span>
+        </p>
+
+        <p>Question: <span id="questionStatus">None</span></p>
+
+        <p id="errorMessage" role="alert" aria-live="assertive">Error: None</p>
+      </section>
+
+      <div class="instructions">
+        <strong>How to use:</strong>
+
+        <ol>
+          <li>Allow microphone permission if asked.</li>
+
+          <li>
+            Click Start Listening, then ask a complete question. You do not need
+            a wake word.
+          </li>
+
+          <li>
+            Wait for NAVIS to answer aloud; it will then listen for your next
+            question.
+          </li>
+          <li>
+            While NAVIS is speaking, say “Stop” or “Stop NAVIS” to interrupt it.
+            For hazard checks, click Enable Camera once to grant browser
+            permission. Then say “Hazard” or “Start Hazard Monitoring” to begin,
+            “Stop Hazard Monitoring” to stop, or “Describe Hazards” for a
+            one-time check; you can also use the camera buttons.
+          </li>
+        </ol>
+
+        Camera permission must be granted with a button click; browsers do not
+        allow a spoken command to grant camera access. Hazard monitoring checks
+        frames periodically and gives image-based warnings. Apparent size or
+        growth is only a visual cue, not a distance measurement. Keep using a
+        white cane or guide dog; do not rely on NAVIS to verify a safe path.
+      </div>
+
+      <p id="lastQuestion">Question being processed: None</p>
+
+      <p id="lastResponse">Backend response: None</p>
+    </main>
+
+    <script>
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      const statusBox = document.getElementById("status");
+
+      const startBtn = document.getElementById("startBtn");
+
+      const stopBtn = document.getElementById("stopBtn");
+
+      const testBtn = document.getElementById("testBtn");
+
+      const questionForm = document.getElementById("questionForm");
+
+      const questionInput = document.getElementById("questionInput");
+
+      const sendQuestionBtn = document.getElementById("sendQuestionBtn");
+
+      const clearConversationBtn = document.getElementById(
+        "clearConversationBtn",
+      );
+
+      const languageSelector = document.getElementById("languageSelector");
+
+      const cameraBtn = document.getElementById("cameraBtn");
+
+      const describeBtn = document.getElementById("describeBtn");
+      const describeHazardsBtn = document.getElementById("describeHazardsBtn");
+
+      const cameraPreview = document.getElementById("cameraPreview");
+
+      const cameraStatus = document.getElementById("cameraStatus");
+      const hazardStatus = document.getElementById("hazardStatus");
+      const hazardBtn = document.getElementById("hazardBtn");
+
+      const currentState = document.getElementById("currentState");
+
+      const recognitionStatus = document.getElementById("recognitionStatus");
+
+      const latestTranscript = document.getElementById("latestTranscript");
+
+      const detectedWakeWord = document.getElementById("detectedWakeWord");
+
+      const questionStatus = document.getElementById("questionStatus");
+
+      const errorMessage = document.getElementById("errorMessage");
+
+      const lastQuestion = document.getElementById("lastQuestion");
+
+      const lastResponse = document.getElementById("lastResponse");
+
+      let state = "IDLE";
+
+      let running = false;
+
+      let recognition = null;
+
+      let restartTimer = null;
+
+      let recognitionBlocked = false;
+
+      let requestController = null;
+      let stopCommandRecognition = null;
+      let stopRecognitionRetryTimer = null;
+      let speechStopRequested = false;
+
+      let cameraStream = null;
+
+      let conversationHistory = [];
+
+      // Hazard monitoring state; independent of LLM functionality.
+      let hazardMonitoring = false;
+      let hazardMonitoringGeneration = 0;
+      let hazardTimer = null;
+      let hazardRequestBusy = false;
+      let lastHazardSpeech = "";
+      let lastHazardSpeechAt = 0;
+      let personTrack = null;
+      let hazardRestartPending = false;
+      let hazardRestartRecognition = null;
+      let hazardRestartTimer = null;
+      let hazardSpeechActive = false;
+
+      function setState(nextState, message) {
+        state = nextState;
+
+        currentState.textContent = state;
+
+        if (message) {
+          statusBox.textContent = message;
+        }
+
+        console.log("[NAVIS] State:", state, message || "");
+
+        updateButtons();
+      }
+
+      function setError(message) {
+        errorMessage.textContent = "Error: " + message;
+
+        console.error("[NAVIS]", message);
+      }
+
+      function clearError() {
+        errorMessage.textContent = "Error: None";
+      }
+
+      function updateButtons() {
+        const active =
+          running ||
+          state === "TESTING" ||
+          state === "PROCESSING" ||
+          state === "SPEAKING";
+
+        startBtn.disabled = active || recognition !== null;
+
+        stopBtn.disabled =
+          !running &&
+          state !== "TESTING" &&
+          state !== "PROCESSING" &&
+          state !== "SPEAKING";
+
+        testBtn.disabled = active || recognition !== null;
+
+        sendQuestionBtn.disabled = active || !questionInput.value.trim();
+
+        describeBtn.disabled =
+          !cameraStream || state === "PROCESSING" || state === "TESTING";
+        describeHazardsBtn.disabled =
+          !cameraStream ||
+          hazardRequestBusy ||
+          state === "PROCESSING" ||
+          state === "TESTING" ||
+          state === "SPEAKING";
+        hazardBtn.disabled = !cameraStream;
+        hazardBtn.textContent = hazardMonitoring
+          ? "Stop Hazard Monitoring"
+          : "Start Hazard Monitoring";
+
+        clearConversationBtn.disabled =
+          state === "PROCESSING" || state === "SPEAKING";
+
+        cameraBtn.textContent = cameraStream
+          ? "Disable Camera"
+          : "Enable Camera";
+      }
+
+      async function enableCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error(
+            "Camera access is unavailable. Open NAVIS on localhost or use HTTPS in a camera-capable browser.",
+          );
+        }
+
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" },
+
+          audio: false,
+        });
+
+        cameraPreview.srcObject = cameraStream;
+
+        await cameraPreview.play();
+
+        cameraStatus.textContent =
+          "Camera is on. Frames are sent to NAVIS only when you request a scene description or start hazard monitoring.";
+
+        updateButtons();
+      }
+
+      function disableCamera() {
+        stopHazardMonitoring();
+        stopHazardRestartListener();
+
+        if (cameraStream) {
+          cameraStream.getTracks().forEach((track) => track.stop());
+
+          cameraStream = null;
+        }
+
+        cameraPreview.srcObject = null;
+
+        cameraStatus.textContent =
+          "Camera is off. Enable it before asking about your surroundings.";
+
+        updateButtons();
+      }
+
+      function captureCameraFrame() {
+        if (
+          !cameraStream ||
+          !cameraPreview.videoWidth ||
+          !cameraPreview.videoHeight
+        ) {
+          return Promise.reject(
+            new Error(
+              "Camera is not ready. Click Enable Camera and wait for the live preview.",
+            ),
+          );
+        }
+
+        const maxDimension = 1280;
+
+        const scale = Math.min(
+          1,
+
+          maxDimension /
+            Math.max(cameraPreview.videoWidth, cameraPreview.videoHeight),
+        );
+
+        const canvas = document.createElement("canvas");
+
+        canvas.width = Math.round(cameraPreview.videoWidth * scale);
+
+        canvas.height = Math.round(cameraPreview.videoHeight * scale);
+
+        const context = canvas.getContext("2d");
+
+        if (!context) {
+          return Promise.reject(
+            new Error("Could not capture an image from the camera."),
+          );
+        }
+
+        context.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
+
+        return new Promise((resolve, reject) => {
+          canvas.toBlob(
+            (blob) => {
+              if (blob) resolve(blob);
+              else reject(new Error("Could not encode the camera image."));
+            },
+
+            "image/jpeg",
+
+            0.82,
+          );
+        });
+      }
+
+      function speak(message) {
+        if (
+          !("speechSynthesis" in window) ||
+          !window.SpeechSynthesisUtterance
+        ) {
+          setError("Speech output is unavailable in this browser.");
+
+          return Promise.resolve(false);
+        }
+
+        return new Promise((resolve) => {
+          speechStopRequested = false;
+          window.speechSynthesis.cancel();
+
+          const utterance = new SpeechSynthesisUtterance(message);
+
+          utterance.lang = /[\u0900-\u097f]/.test(message)
+            ? "hi-IN"
+            : languageSelector.value || "en-IN";
+
+          utterance.rate = 1;
+
+          utterance.pitch = 1;
+
+          let settled = false;
+
+          function finish(success) {
+            if (settled) return;
+
+            settled = true;
+
+            resolve(success);
+          }
+
+          utterance.onerror = (event) => {
+            if (
+              speechStopRequested &&
+              (event.error === "canceled" || event.error === "interrupted")
+            ) {
+              finish(false);
+              return;
+            }
+            setError("Speech output failed: " + event.error);
+
+            finish(false);
+          };
+
+          utterance.onend = () => {
+            stopSpeechStopListener();
+            finish(true);
+          };
+
+          try {
+            window.speechSynthesis.speak(utterance);
+            window.setTimeout(startSpeechStopListener, 120);
+          } catch (error) {
+            setError("Could not start speech output: " + error.message);
+
+            finish(false);
+          }
+        });
+      }
+
+      function stopSpeechStopListener() {
+        if (stopRecognitionRetryTimer !== null) {
+          clearTimeout(stopRecognitionRetryTimer);
+
+          stopRecognitionRetryTimer = null;
+        }
+        if (stopCommandRecognition) {
+          const session = stopCommandRecognition;
+          try {
+            session.stop();
+          } catch (error) {
+            if (stopCommandRecognition === session) {
+              stopCommandRecognition = null;
+            }
+            console.warn("[NAVIS] Could not stop speech-interrupt listener:", error);
+          }
+        }
+      }
+
+      function startSpeechStopListener() {
+        if (
+          state !== "SPEAKING" ||
+          !SpeechRecognition ||
+          speechStopRequested ||
+          !window.speechSynthesis.speaking ||
+          stopCommandRecognition ||
+          stopRecognitionRetryTimer !== null
+        ) {
+          return;
+        }
+
+        if (recognition !== null) {
+          stopRecognitionRetryTimer = window.setTimeout(() => {
+            stopRecognitionRetryTimer = null;
+            startSpeechStopListener();
+          }, 250);
+          return;
+        }
+
+        let session;
+        try {
+          session = new SpeechRecognition();
+        } catch (error) {
+          console.warn("[NAVIS] Could not create speech-interrupt listener:", error);
+          return;
+        }
+
+        session.lang = languageSelector.value || "en-IN";
+        session.continuous = true;
+        session.interimResults = false;
+        session.maxAlternatives = 3;
+        stopCommandRecognition = session;
+
+        session.onresult = (event) => {
+          if (stopCommandRecognition !== session) return;
+          for (let index = event.resultIndex; index < event.results.length; index += 1) {
+            const result = event.results[index];
+            if (!result.isFinal) continue;
+
+            const transcript = result[0].transcript
+              .trim()
+              .toLowerCase()
+              .replace(/[.!?,]+$/g, "")
+              .replace(/\s+/g, " ");
+            if (!/^(?:stop|stop navis|navis stop|quiet|cancel speech)$/.test(transcript)) {
+              continue;
+            }
+
+            console.log("[NAVIS] Speech interrupted by voice command:", transcript);
+            speechStopRequested = true;
+            const restartHazardByVoice =
+              hazardMonitoring && hazardSpeechActive && !running && Boolean(cameraStream);
+            stopSpeechStopListener();
+            if (hazardSpeechActive && hazardMonitoring) stopHazardMonitoring();
+            window.speechSynthesis.cancel();
+            if (restartHazardByVoice) hazardRestartPending = true;
+            if (running && !recognitionBlocked) {
+              setState(
+                "QUESTION_LISTENING",
+                "NAVIS stopped speaking. Listening for your next command...",
+              );
+              scheduleRecognition(300, "QUESTION_LISTENING");
+            } else if (state === "SPEAKING") {
+              setState("IDLE", "NAVIS stopped speaking.");
+            }
+            return;
+          }
+        };
+
+        session.onerror = (event) => {
+          if (event.error !== "no-speech" && event.error !== "aborted") {
+            console.warn(
+              "[NAVIS] Speech-interrupt recognition failed:",
+              event.error,
+            );
+          }
+        };
+
+        session.onend = () => {
+          if (stopCommandRecognition !== session) return;
+          stopCommandRecognition = null;
+          if (hazardRestartPending) {
+            startHazardRestartListener();
+            return;
+          }
+          if (
+            state === "SPEAKING" &&
+            !speechStopRequested &&
+            window.speechSynthesis.speaking
+          ) {
+            stopRecognitionRetryTimer = window.setTimeout(() => {
+              stopRecognitionRetryTimer = null;
+              startSpeechStopListener();
+            }, 250);
+          }
+        };
+
+        try {
+          session.start();
+        } catch (error) {
+          stopCommandRecognition = null;
+          console.warn("[NAVIS] Could not start speech-interrupt listener:", error);
+        }
+      }
+
+      function stopHazardRestartListener() {
+        hazardRestartPending = false;
+        if (hazardRestartTimer !== null) {
+          clearTimeout(hazardRestartTimer);
+          hazardRestartTimer = null;
+        }
+        if (hazardRestartRecognition) {
+          const session = hazardRestartRecognition;
+          hazardRestartRecognition = null;
+          try {
+            session.stop();
+          } catch (error) {
+            console.warn("[NAVIS] Could not stop hazard restart listener:", error);
+          }
+        }
+      }
+
+      function startHazardRestartListener() {
+        if (
+          !hazardRestartPending ||
+          !cameraStream ||
+          hazardMonitoring ||
+          running ||
+          !SpeechRecognition ||
+          hazardRestartRecognition
+        ) {
+          return;
+        }
+        if (recognition !== null || stopCommandRecognition !== null) {
+          hazardRestartTimer = window.setTimeout(() => {
+            hazardRestartTimer = null;
+            startHazardRestartListener();
+          }, 250);
+          return;
+        }
+
+        let session;
+        try {
+          session = new SpeechRecognition();
+        } catch (error) {
+          hazardRestartPending = false;
+          setError("Could not listen for the Hazard restart command: " + error.message);
+          return;
+        }
+
+        session.lang = languageSelector.value || "en-IN";
+        session.continuous = true;
+        session.interimResults = false;
+        session.maxAlternatives = 3;
+        hazardRestartRecognition = session;
+        session.onresult = (event) => {
+          if (hazardRestartRecognition !== session) return;
+          for (let index = event.resultIndex; index < event.results.length; index += 1) {
+            const result = event.results[index];
+            if (!result.isFinal) continue;
+            const transcript = result[0].transcript.trim();
+            if (!isHazardStartCommand(transcript)) continue;
+
+            stopHazardRestartListener();
+            startHazardMonitoring();
+            void speakLocalResult(
+              "Hazard monitoring is on. I will check camera frames and speak image-based warnings. Keep using your cane or guide dog.",
+            );
+            return;
+          }
+        };
+        session.onerror = (event) => {
+          if (event.error !== "no-speech" && event.error !== "aborted") {
+            hazardRestartPending = false;
+            setError(
+              "Could not listen for the Hazard restart command: " +
+                recognitionErrorMessage(event.error),
+            );
+          }
+        };
+        session.onend = () => {
+          if (hazardRestartRecognition !== session) return;
+          hazardRestartRecognition = null;
+          if (hazardRestartPending) startHazardRestartListener();
+        };
+        try {
+          session.start();
+        } catch (error) {
+          hazardRestartRecognition = null;
+          hazardRestartPending = false;
+          setError("Could not start listening for Hazard: " + error.message);
+        }
+      }
+
+      // ---------------- HAZARD MONITORING ----------------
+      // Calls only /api/hazard-check; it does not call or modify the LLM.
+      function getPersonProximityAlert(hazards) {
+        const now = Date.now();
+        const people = hazards
+          .filter((item) => item.label === "person" && item.bbox?.length === 4)
+          .map((item) => {
+            const [x1, y1, x2, y2] = item.bbox.map(Number);
+            return {
+              centerX: (x1 + x2) / 2,
+              height: Math.max(0, y2 - y1),
+              area: Math.max(0, x2 - x1) * Math.max(0, y2 - y1),
+            };
+          })
+          .sort((a, b) => b.area - a.area);
+
+        if (!people.length) {
+          if (personTrack && now - personTrack.lastSeen > 1800) {
+            personTrack = null;
+          }
+          return "";
+        }
+
+        const person = people[0];
+        const samePerson =
+          personTrack &&
+          now - personTrack.lastSeen <= 1800 &&
+          Math.abs(person.centerX - personTrack.centerX) <= 0.25;
+        const growing =
+          samePerson &&
+          person.height >= personTrack.height * 1.08 &&
+          person.height - personTrack.height >= 0.015;
+        const growthFrames = growing ? personTrack.growthFrames + 1 : 0;
+        personTrack = {
+          centerX: person.centerX,
+          height: person.height,
+          lastSeen: now,
+          growthFrames,
+        };
+
+        if (person.height >= 0.45 || person.area >= 0.18) {
+          return "A person appears close in the camera view. Please stop and check.";
+        }
+        if (growthFrames >= 2 && person.height >= 0.16) {
+          return "A person appears to be approaching. Please pause and check.";
+        }
+        return "";
+      }
+
+      async function checkHazardsOnce() {
+        if (!hazardMonitoring || !cameraStream || hazardRequestBusy) return;
+        const monitoringGeneration = hazardMonitoringGeneration;
+        hazardRequestBusy = true;
+        try {
+          const frame = await captureCameraFrame();
+          const form = new FormData();
+          form.append("image", frame, "navis-hazard-frame.jpg");
+          const response = await fetch("/api/web/hazard-check", {
+            method: "POST",
+            body: form,
+          });
+          let data;
+          try {
+            data = await response.json();
+          } catch (_) {
+            throw new Error("Hazard endpoint returned invalid JSON.");
+          }
+          if (!response.ok || !data || data.ok !== true) {
+            throw new Error((data && (data.message || data.detail)) || "Hazard check failed.");
+          }
+          if (
+            !hazardMonitoring ||
+            monitoringGeneration !== hazardMonitoringGeneration
+          ) {
+            return;
+          }
+          const proximityAlert = getPersonProximityAlert(data.hazards || []);
+          const message =
+            proximityAlert || (data.decision && data.decision.message) || "";
+          const action = (data.decision && data.decision.action) || "monitor";
+          hazardStatus.textContent = message ? action.toUpperCase() : "IDLE";
+          const now = Date.now();
+          const cooldownElapsed = now - lastHazardSpeechAt >= 8000;
+          const newWarning = message && message !== lastHazardSpeech;
+
+          // Never interrupt an active LLM request or its spoken response.
+          if (
+            message &&
+            (newWarning || cooldownElapsed) &&
+            (newWarning ? now - lastHazardSpeechAt >= 2500 : cooldownElapsed) &&
+            !["PROCESSING", "SPEAKING", "TESTING"].includes(state)
+          ) {
+            if (
+              !hazardMonitoring ||
+              monitoringGeneration !== hazardMonitoringGeneration
+            ) {
+              return;
+            }
+            lastHazardSpeech = message;
+            lastHazardSpeechAt = now;
+            const shouldResumeListening = running;
+            if (recognition) {
+              try {
+                recognition.stop();
+              } catch (_) {}
+            }
+            setState("SPEAKING", "NAVIS hazard warning...");
+            hazardStatus.textContent = "WARNING";
+            hazardSpeechActive = true;
+            try {
+              await speak(message);
+            } finally {
+              hazardSpeechActive = false;
+            }
+            if (
+              !hazardMonitoring ||
+              monitoringGeneration !== hazardMonitoringGeneration
+            ) {
+              return;
+            }
+            if (shouldResumeListening && running && !recognitionBlocked) {
+              setState(
+                "QUESTION_LISTENING",
+                "Listening for your next question...",
+              );
+              scheduleRecognition(500, "QUESTION_LISTENING");
+            } else if (!running && state === "SPEAKING") {
+              setState("IDLE", "Hazard warning finished.");
+            }
+          }
+        } catch (error) {
+          if (
+            !hazardMonitoring ||
+            monitoringGeneration !== hazardMonitoringGeneration
+          ) {
+            return;
+          }
+          console.error("[NAVIS] Hazard monitoring error:", error);
+          cameraStatus.textContent =
+            "Hazard monitoring error: " + error.message;
+        } finally {
+          hazardRequestBusy = false;
+        }
+      }
+
+      function startHazardMonitoring() {
+        if (!cameraStream || hazardMonitoring) return;
+        stopHazardRestartListener();
+        hazardMonitoringGeneration += 1;
+        hazardMonitoring = true;
+        lastHazardSpeech = "";
+        lastHazardSpeechAt = 0;
+        personTrack = null;
+        hazardStatus.textContent = "MONITORING";
+        updateButtons();
+        cameraStatus.textContent =
+          "Hazard monitoring is active. Keep the camera pointed ahead.";
+        void checkHazardsOnce();
+        hazardTimer = window.setInterval(checkHazardsOnce, 1200);
+      }
+
+      function stopHazardMonitoring() {
+        hazardMonitoringGeneration += 1;
+        hazardMonitoring = false;
+        stopHazardRestartListener();
+        if (hazardTimer !== null) {
+          window.clearInterval(hazardTimer);
+          hazardTimer = null;
+        }
+        hazardStatus.textContent = "IDLE";
+        updateButtons();
+        if (cameraStream) {
+          cameraStatus.textContent =
+            "Camera is on. Hazard monitoring is stopped.";
+        }
+      }
+
+      function isHazardStartCommand(text) {
+        const command = text
+          .trim()
+          .toLowerCase()
+          .replace(/[.!?,]+$/g, "")
+          .replace(/\s+/g, " ");
+        const hazardKeyword =
+          /^(?:(?:hey|okay|ok)\s+)?hazard(?:\s+(?:monitoring|monitor|alerts?|detection))?$/.test(
+            command,
+          );
+        const explicitCommand =
+          /\b(start|enable|begin|turn on)\b.{0,35}\b(hazard|obstacle|safety)\b.{0,20}\b(monitor(?:ing)?|alerts?|detection)\b|\b(start|enable|begin|turn on)\s+(?:the\s+)?(?:hazard|obstacle|safety)\s+(?:monitor(?:ing)?|alerts?|detection)\b|\b(start|enable|begin|turn on)\s+(?:the\s+)?monitoring\b/i.test(
+            command,
+          );
+        return hazardKeyword || explicitCommand;
+      }
+
+      function isHazardStopCommand(text) {
+        return /\b(stop|disable|turn off)\b.{0,35}\b(hazard|obstacle|safety)\b.{0,20}\b(monitor(?:ing)?|alerts?|detection)\b|\b(stop|disable|turn off)\s+(?:the\s+)?(?:hazard|obstacle|safety)\s+(?:monitor(?:ing)?|alerts?|detection)\b|\b(stop|disable|turn off)\s+(?:the\s+)?monitoring\b/i.test(
+          text,
+        );
+      }
+
+      function isHazardDescriptionCommand(text) {
+        return /\b(describe|what|tell me|check|read out)\b.{0,35}\b(hazards?|obstacles?)\b|\b(hazards?|obstacles?)\b.{0,25}\b(around|ahead|in front|see|detected)\b/i.test(
+          text,
+        );
+      }
+
+      async function speakLocalResult(message) {
+        setState("SPEAKING", "NAVIS is speaking...");
+        hazardSpeechActive = true;
+        try {
+          await speak(message);
+        } finally {
+          hazardSpeechActive = false;
+        }
+        if (running && !recognitionBlocked) {
+          setState(
+            "QUESTION_LISTENING",
+            "Listening for your next question...",
+          );
+          scheduleRecognition(700, "QUESTION_LISTENING");
+        } else if (state === "SPEAKING") {
+          setState("IDLE", "Response finished.");
+        }
+      }
+
+      async function describeHazardsOnce() {
+        if (!cameraStream) {
+          await speakLocalResult(
+            "Please click Enable Camera first. The browser requires your permission before NAVIS can inspect the camera.",
+          );
+          return;
+        }
+
+        if (hazardRequestBusy) {
+          await speakLocalResult(
+            "A hazard check is already running. Please wait a moment.",
+          );
+          return;
+        }
+
+        hazardRequestBusy = true;
+        updateButtons();
+        setState("PROCESSING", "Checking the current camera frame for hazards...");
+        try {
+          const frame = await captureCameraFrame();
+          const form = new FormData();
+          form.append("image", frame, "navis-hazard-description.jpg");
+          const response = await fetch("/api/web/hazard-check", {
+            method: "POST",
+            body: form,
+          });
+          const data = await response.json();
+          if (!response.ok || !data || data.ok !== true) {
+            throw new Error((data && (data.message || data.detail)) || "Hazard check failed.");
+          }
+
+          const hazards = Array.isArray(data.hazards) ? data.hazards : [];
+          const decision = data.decision || {};
+          let message = decision.message;
+          if (!hazards.length) {
+            message =
+              "I did not detect a potential hazard in this image. That does not mean the path is clear.";
+          } else if (!message) {
+            const labels = [...new Set(hazards.map((item) => item.label))]
+              .filter(Boolean)
+              .slice(0, 5);
+            message = labels.length
+              ? `Potential hazards detected: ${labels.join(", ")}. Please pause and check your surroundings.`
+              : "Potential hazards detected. Please pause and check your surroundings.";
+          }
+
+          hazardStatus.textContent = hazards.length
+            ? `${hazards.length} POTENTIAL HAZARD${hazards.length === 1 ? "" : "S"}`
+            : "NO OBJECTS DETECTED";
+          lastResponse.textContent = "Hazard check: " + message;
+          await speakLocalResult(message);
+        } catch (error) {
+          setError("Hazard description failed: " + error.message);
+          if (state === "PROCESSING") {
+            await speakLocalResult(
+              "Sorry, I could not check the camera for hazards. " + error.message,
+            );
+          }
+        } finally {
+          hazardRequestBusy = false;
+          updateButtons();
+        }
+      }
+
+      async function handleHazardVoiceCommand(text) {
+        if (/\b(enable|turn on|start)\s+(?:the\s+)?camera\b/i.test(text)) {
+          await speakLocalResult(
+            "For privacy, please click Enable Camera. Then say Start Hazard Monitoring or Describe Hazards.",
+          );
+          return true;
+        }
+
+        if (isHazardStartCommand(text)) {
+          if (!cameraStream) {
+            await speakLocalResult(
+              "Please click Enable Camera first. Once the camera preview is on, say Start Hazard Monitoring again.",
+            );
+            return true;
+          }
+          if (hazardMonitoring) {
+            await speakLocalResult("Hazard monitoring is already on.");
+            return true;
+          }
+          startHazardMonitoring();
+          await speakLocalResult(
+            "Hazard monitoring is on. I will check camera frames and speak image-based warnings. Keep using your cane or guide dog.",
+          );
+          return true;
+        }
+
+        if (isHazardStopCommand(text)) {
+          if (hazardMonitoring) stopHazardMonitoring();
+          if (running && !recognitionBlocked) {
+            setState(
+              "QUESTION_LISTENING",
+              "Listening for your next command...",
+            );
+            scheduleRecognition(300, "QUESTION_LISTENING");
+          }
+          return true;
+        }
+
+        if (isHazardDescriptionCommand(text)) {
+          await describeHazardsOnce();
+          return true;
+        }
+
+        return false;
+      }
+      // --------------------------------------------------
+
+      function clearRestartTimer() {
+        if (restartTimer !== null) {
+          clearTimeout(restartTimer);
+
+          restartTimer = null;
+        }
+      }
+
+      function scheduleRecognition(delay, targetState) {
+        if (
+          !running ||
+          recognitionBlocked ||
+          recognition !== null ||
+          restartTimer !== null ||
+          state !== targetState
+        ) {
+          return;
+        }
+
+        restartTimer = setTimeout(() => {
+          restartTimer = null;
+
+          if (running && state === targetState && recognition === null) {
+            startRecognition(targetState);
+          }
+        }, delay);
+      }
+
+      function recognitionErrorMessage(code) {
+        switch (code) {
+          case "no-speech":
+            return "No speech was heard. Keep the microphone active and try again.";
+
+          case "network":
+            return "Chrome's online speech-recognition service is unavailable. Check your internet connection, then retry, or type your question in the field below.";
+
+          case "not-allowed":
+
+          case "service-not-allowed":
+            return "Microphone or speech-recognition permission was denied. Allow microphone access for this site in Chrome, then press Stop and Start Listening.";
+
+          case "audio-capture":
+            return "Chrome could not access an audio input. Check that the microphone is connected and not blocked by another app.";
+
+          case "language-not-supported":
+            return "Chrome's speech service does not support en-IN. Try an up-to-date Chrome installation.";
+
+          default:
+            return (
+              "Speech recognition failed (" +
+              code +
+              "). Press Stop and Start Listening to retry."
+            );
+        }
+      }
+
+      function startRecognition(sessionState) {
+        if (
+          recognition !== null ||
+          !["WAKE_WORD", "QUESTION_LISTENING", "TESTING"].includes(sessionState)
+        ) {
+          return;
+        }
+        stopHazardRestartListener();
+
+        if (!SpeechRecognition) {
+          recognitionBlocked = true;
+
+          recognitionStatus.textContent = "Unavailable";
+
+          setError(
+            "Speech recognition is not supported here. Use desktop Chrome or another browser that provides the Web Speech API.",
+          );
+
+          if (sessionState === "TESTING")
+            setState("IDLE", "Speech test unavailable.");
+          else {
+            running = false;
+
+            setState("IDLE", "Speech recognition is unavailable.");
+          }
+
+          return;
+        }
+
+        let session;
+
+        try {
+          session = new SpeechRecognition();
+        } catch (error) {
+          recognitionBlocked = true;
+
+          setError("Could not create speech recognition: " + error.message);
+
+          return;
+        }
+
+        session.lang = languageSelector.value || "en-IN";
+
+        session.continuous = sessionState === "WAKE_WORD";
+
+        session.interimResults = true;
+
+        session.maxAlternatives = 3;
+
+        recognition = session;
+
+        recognitionStatus.textContent = "Starting";
+
+        updateButtons();
+
+        const questionParts = [];
+
+        let detectedWake = false;
+
+        session.onstart = () => {
+          console.log("[NAVIS] onstart");
+
+          if (recognition !== session) return;
+
+          recognitionStatus.textContent = "Listening";
+
+          if (sessionState === "WAKE_WORD") {
+            statusBox.textContent =
+              'Listening for the standalone word "Hey"...';
+          } else if (sessionState === "QUESTION_LISTENING") {
+            statusBox.textContent = "Listening for your complete question...";
+          } else {
+            statusBox.textContent = "Speech test active. Say a few words.";
+          }
+        };
+
+        session.onaudiostart = () => {
+          console.log("[NAVIS] onaudiostart");
+
+          if (recognition === session)
+            recognitionStatus.textContent = "Microphone active";
+        };
+
+        session.onspeechstart = () => {
+          console.log("[NAVIS] onspeechstart");
+
+          if (recognition === session)
+            recognitionStatus.textContent = "Speech detected";
+        };
+
+        session.onresult = (event) => {
+          if (recognition !== session) return;
+
+          if (
+            (sessionState === "WAKE_WORD" && state !== "WAKE_WORD") ||
+            (sessionState === "QUESTION_LISTENING" &&
+              state !== "QUESTION_LISTENING") ||
+            (sessionState === "TESTING" && state !== "TESTING")
+          ) {
+            return;
+          }
+
+          for (
+            let index = event.resultIndex;
+            index < event.results.length;
+            index += 1
+          ) {
+            const result = event.results[index];
+
+            const transcript = result[0].transcript.trim();
+
+            console.log(
+              "[NAVIS] onresult transcript:",
+              transcript,
+              "| final:",
+              result.isFinal,
+            );
+
+            if (!transcript) continue;
+
+            latestTranscript.textContent = transcript;
+
+            if (
+              sessionState === "WAKE_WORD" &&
+              !detectedWake &&
+              /\bhey\b/i.test(transcript)
+            ) {
+              detectedWake = true;
+
+              detectedWakeWord.textContent = transcript;
+
+              console.log("[NAVIS] Standalone wake word detected:", transcript);
+
+              setState(
+                "QUESTION_LISTENING",
+                "Wake word detected. Preparing to listen...",
+              );
+
+              try {
+                session.stop();
+              } catch (error) {
+                recognitionBlocked = true;
+
+                setError(
+                  "Could not stop wake-word recognition: " + error.message,
+                );
+              }
+            } else if (sessionState === "QUESTION_LISTENING") {
+              if (result.isFinal) questionParts[index] = transcript;
+
+              questionStatus.textContent =
+                questionParts.filter(Boolean).join(" ") || transcript;
+            } else if (sessionState === "TESTING" && result.isFinal) {
+              try {
+                session.stop();
+              } catch (error) {
+                setError("Could not finish the speech test: " + error.message);
+              }
+            }
+          }
+        };
+
+        session.onerror = (event) => {
+          console.error("[NAVIS] onerror:", event.error, event.message || "");
+
+          if (event.error === "aborted") {
+            return;
+          }
+
+          const message = recognitionErrorMessage(event.error);
+
+          setError(message);
+
+          if (event.error !== "no-speech") {
+            recognitionBlocked = true;
+
+            running = false;
+
+            clearRestartTimer();
+
+            recognitionStatus.textContent = "Recognition stopped";
+
+            setState(
+              "STOPPED",
+
+              event.error === "network"
+                ? "Voice recognition is offline. Type your question below, or check your internet connection and press Start Listening to retry."
+                : message,
+            );
+          }
+
+          if (event.error === "no-speech" && sessionState === "WAKE_WORD") {
+            statusBox.textContent =
+              'No speech heard. Still waiting for "Hey"...';
+          }
+        };
+
+        session.onend = async () => {
+          console.log("[NAVIS] onend");
+
+          if (recognition !== session) return;
+
+          recognition = null;
+
+          recognitionStatus.textContent = "Not listening";
+
+          updateButtons();
+
+          if (state === "STOPPED" || state === "IDLE") return;
+
+          if (sessionState === "TESTING") {
+            setState(
+              "IDLE",
+              "Speech test finished. Wake-word detection was not used.",
+            );
+
+            return;
+          }
+
+          if (
+            sessionState === "WAKE_WORD" &&
+            state === "QUESTION_LISTENING" &&
+            detectedWake
+          ) {
+            void confirmQuestionListening();
+
+            return;
+          }
+
+          if (
+            sessionState === "QUESTION_LISTENING" &&
+            state === "QUESTION_LISTENING"
+          ) {
+            const question = questionParts.filter(Boolean).join(" ").trim();
+
+            if (question.length >= 3) {
+              if (await handleHazardVoiceCommand(question)) return;
+
+              questionStatus.textContent = question;
+
+              lastQuestion.textContent =
+                "Question being processed: " + question;
+
+              setState(
+                "PROCESSING",
+                "Sending your complete question to NAVIS...",
+              );
+
+              void sendQuestion(question);
+            } else if (!recognitionBlocked) {
+              statusBox.textContent = question
+                ? "I only heard a short fragment. Please ask your full question, or type it below."
+                : "No complete question was heard. Please try again or type your question below.";
+
+              scheduleRecognition(700, "QUESTION_LISTENING");
+            }
+
+            return;
+          }
+
+          if (
+            sessionState === "WAKE_WORD" &&
+            state === "WAKE_WORD" &&
+            !recognitionBlocked
+          ) {
+            scheduleRecognition(700, "WAKE_WORD");
+          }
+        };
+
+        try {
+          session.start();
+
+          console.log("[NAVIS] Recognition start requested for", sessionState);
+        } catch (error) {
+          recognition = null;
+
+          recognitionBlocked = true;
+
+          recognitionStatus.textContent = "Could not start";
+
+          setError(
+            "Could not start Chrome speech recognition: " +
+              error.message +
+              ". Press Stop and Start Listening to retry.",
+          );
+
+          updateButtons();
+
+          if (sessionState === "TESTING")
+            setState("IDLE", "Speech test could not start.");
+        }
+      }
+
+      async function confirmQuestionListening() {
+        if (!running || state !== "QUESTION_LISTENING") return;
+
+        setState("SPEAKING", "Wake word detected. Speaking confirmation...");
+
+        await speak("Yes, I'm listening. How can I help?");
+
+        if (running && state === "SPEAKING" && !recognitionBlocked) {
+          setState(
+            "QUESTION_LISTENING",
+            "Listening for your complete question...",
+          );
+
+          scheduleRecognition(300, "QUESTION_LISTENING");
+        }
+      }
+
+      function isSceneQuestion(question) {
+        return /\b(surroundings?|around me|what do you see|what can you see|what is visible|what(?:'s| is) in front of me|what(?:'s| is) behind me|what(?:'s| is) in (?:(?:the|this) )?(?:image|picture|photo|frame|room|scene|background)|describe (?:(?:the|this|my) )?(?:image|picture|photo|background|foreground|room|scene|view|surroundings?)|tell me what you see|what objects? (?:are )?(?:around|near) me|explain (?:(?:the|my) )?(?:surroundings?|scene)|(?:chair|object|person|door|obstacle|thing).{0,35}\b(left|right|front|visible|see)\b|\b(left|right|front)\b.{0,35}\b(chair|object|person|door|obstacle|thing)\b)\b/i.test(
+          question,
+        );
+      }
+
+      async function sendQuestion(question) {
+        const controller = new AbortController();
+
+        requestController = controller;
+
+        const timeout = setTimeout(() => controller.abort(), 60000);
+
+        try {
+          let response;
+
+          if (isSceneQuestion(question)) {
+            const image = await captureCameraFrame();
+
+            const form = new FormData();
+
+            form.append("image", image, "navis-camera.jpg");
+
+            form.append("question", question);
+
+            form.append("history", JSON.stringify(conversationHistory));
+
+            response = await fetch("/api/web/describe-scene", {
+              method: "POST",
+
+              body: form,
+
+              signal: controller.signal,
+            });
+          } else {
+            const payload = {
+              question,
+              history: conversationHistory,
+            };
+            if (/\b(navigate|navigation|directions|take me|go to|route to|how do i get to)\b/i.test(question) && navigator.geolocation) {
+              try {
+                const position = await new Promise((resolve, reject) => {
+                  navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 5000,
+                  });
+                });
+                payload.location = {
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude,
+                  accuracy_m: position.coords.accuracy,
+                };
+              } catch (_) {
+                // The backend will request a location and will not create a route.
+              }
+            }
+            response = await fetch("/api/web/voice-command", {
+              method: "POST",
+
+              headers: { "Content-Type": "application/json" },
+
+              body: JSON.stringify(payload),
+
+              signal: controller.signal,
+            });
+          }
+
+          let data;
+
+          try {
+            data = await response.json();
+          } catch (error) {
+            throw new Error("The server returned invalid JSON.");
+          }
+
+          if (
+            !response.ok ||
+            !data ||
+            typeof data.response !== "string"
+          ) {
+            if (data && typeof data.fallback_response === "string") {
+              if (state !== "PROCESSING") return;
+
+              setError(
+                data.message ||
+                  "Gemini is unavailable; using YOLO26 detections only.",
+              );
+
+              lastResponse.textContent =
+                "Backend response: " +
+                data.fallback_response +
+                " " +
+                (data.message || "");
+
+              setState(
+                "SPEAKING",
+                "Speaking YOLO26 scene information...",
+              );
+
+              await speak(
+                data.fallback_response +
+                  " Gemini is unavailable, so this uses YOLO26 detections only.",
+              );
+
+              return;
+            }
+
+            throw new Error(
+              (data && (data.message || data.detail)) ||
+                "The server could not process the question (HTTP " +
+                  response.status +
+                  ").",
+            );
+          }
+
+          if (state !== "PROCESSING") return;
+
+          conversationHistory.push(
+            { role: "user", content: question },
+
+            { role: "assistant", content: data.response },
+          );
+
+          conversationHistory = conversationHistory.slice(-8);
+
+          lastResponse.textContent = "Backend response: " + data.response;
+
+          setState("SPEAKING", "NAVIS is speaking...");
+
+          await speak(data.response);
+        } catch (error) {
+          if (state === "STOPPED") return;
+
+          const message =
+            error.name === "AbortError"
+              ? "The backend request timed out after 60 seconds."
+              : error.message ||
+                "Network error while contacting the NAVIS backend.";
+
+          setError(message);
+
+          lastResponse.textContent =
+            "Backend response: Request failed - " + message;
+
+          if (state === "PROCESSING") {
+            setState("SPEAKING", "NAVIS is reporting an error...");
+
+            await speak("Sorry, I could not process that question. " + message);
+          }
+        } finally {
+          clearTimeout(timeout);
+
+          if (requestController === controller) requestController = null;
+
+          if (state === "PROCESSING" || state === "SPEAKING") {
+            if (running) {
+              setState(
+                "QUESTION_LISTENING",
+                "Listening for your next question...",
+              );
+
+              scheduleRecognition(700, "QUESTION_LISTENING");
+            } else {
+              setState("IDLE", "Response finished.");
+            }
+          }
+        }
+      }
+
+      startBtn.addEventListener("click", () => {
+        if (running || recognition !== null) return;
+
+        clearError();
+
+        clearRestartTimer();
+
+        recognitionBlocked = false;
+
+        running = true;
+
+        questionStatus.textContent = "None";
+
+        setState("QUESTION_LISTENING", "Starting microphone...");
+
+        startRecognition("QUESTION_LISTENING");
+      });
+
+      questionInput.addEventListener("input", updateButtons);
+
+      questionForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const question = questionInput.value.trim();
+
+        if (!question || state === "PROCESSING" || state === "SPEAKING") return;
+
+        clearError();
+
+        questionInput.value = "";
+
+        questionStatus.textContent = question;
+
+        lastQuestion.textContent = "Question being processed: " + question;
+
+        setState("PROCESSING", "Sending your question to NAVIS...");
+
+        if (recognition) {
+          try {
+            recognition.stop();
+          } catch (error) {
+            setError("Could not pause speech recognition: " + error.message);
+          }
+        }
+
+        void sendQuestion(question);
+      });
+
+      testBtn.addEventListener("click", () => {
+        if (running || recognition !== null) return;
+
+        clearError();
+
+        recognitionBlocked = false;
+
+        latestTranscript.textContent = "None";
+
+        setState("TESTING", "Starting independent speech-recognition test...");
+
+        startRecognition("TESTING");
+      });
+
+      cameraBtn.addEventListener("click", async () => {
+        clearError();
+
+        if (cameraStream) {
+          disableCamera();
+
+          return;
+        }
+
+        cameraBtn.disabled = true;
+
+        cameraStatus.textContent = "Requesting camera permission...";
+
+        try {
+          await enableCamera();
+        } catch (error) {
+          disableCamera();
+
+          setError(error.message || "Could not access the laptop camera.");
+        }
+      });
+
+      hazardBtn.addEventListener("click", () => {
+        if (hazardMonitoring) stopHazardMonitoring();
+        else startHazardMonitoring();
+      });
+
+      describeHazardsBtn.addEventListener("click", () => {
+        if (state === "PROCESSING" || state === "SPEAKING") return;
+        void describeHazardsOnce();
+      });
+
+      describeBtn.addEventListener("click", () => {
+        if (!cameraStream || state === "PROCESSING") return;
+
+        clearError();
+
+        setState(
+          "PROCESSING",
+          "Capturing a camera frame and describing the scene...",
+        );
+
+        if (recognition) {
+          try {
+            recognition.stop();
+          } catch (error) {
+            setError("Could not pause speech recognition: " + error.message);
+          }
+        }
+
+        lastQuestion.textContent =
+          "Question being processed: Explain my surroundings";
+
+        void sendQuestion("Explain my surroundings");
+      });
+
+      stopBtn.addEventListener("click", () => {
+        running = false;
+
+        recognitionBlocked = true;
+
+        clearRestartTimer();
+
+        if (requestController) requestController.abort();
+
+        if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+
+        setState("STOPPED", "NAVIS stopped.");
+
+        disableCamera();
+
+        if (recognition) {
+          try {
+            recognition.abort();
+          } catch (error) {
+            setError("Could not stop speech recognition: " + error.message);
+          }
+        }
+
+        updateButtons();
+      });
+
+      clearConversationBtn.addEventListener("click", () => {
+        conversationHistory = [];
+
+        clearError();
+
+        statusBox.textContent =
+          "Conversation cleared. NAVIS keeps no persistent conversation memory.";
+      });
+
+      if (!SpeechRecognition) {
+        recognitionStatus.textContent = "Unavailable";
+
+        setError(
+          "SpeechRecognition is unavailable. Use a supported desktop browser such as Chrome. Recognition may require Google's online service and is not guaranteed to work offline.",
+        );
+      }
+
+      console.log(
+        "[NAVIS] Page loaded. SpeechRecognition supported:",
+        Boolean(SpeechRecognition),
+      );
+    </script>
+  </body>
+</html>

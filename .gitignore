@@ -1,0 +1,46 @@
+# Environment and Secrets
+.env
+*.env
+!.env.example
+
+# Python and Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+backend/.venv/
+env/
+venv/
+ENV/
+
+# Generated and Machine-Specific Files
+.gradle/
+android/.gradle/
+**/build/
+captures/
+local.properties
+*.apk
+*.aab
+*.dex
+*.hprof
+*.pt
+*.onnx
+*.class
+
+# Testing and Caches
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+backend/.model-cache/
+backend/.pip-tmp/
+
+# Runtime Data and Logs
+data/events.jsonl
+data/settings.json
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

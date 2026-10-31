@@ -1,0 +1,9 @@
+{
+  "yolo_confidence": 0.65,
+  "frame_interval_ms": 500,
+  "alert_cooldown_s": 4.0,
+  "sensor_max_age_ms": 1000,
+  "audio_verbosity": "normal",
+  "distance_warn_threshold_m": 1.2,
+  "measurement_units": "metres"
+}

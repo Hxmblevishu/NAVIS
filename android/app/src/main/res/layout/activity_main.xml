@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0F172A"
+    android:padding="20dp">
+
+    <!-- Header -->
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="NAVIS"
+        android:textColor="#38BDF8"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:letterSpacing="0.1" />
+
+    <TextView
+        android:id="@+id/tvSubtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Assistive Navigation Companion"
+        android:textColor="#94A3B8"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Server Connection Settings -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="12dp">
+
+        <EditText
+            android:id="@+id/etServerUrl"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:hint="http://192.168.1.15:8000"
+            android:textColor="#F8FAFC"
+            android:textColorHint="#64748B"
+            android:background="#1E293B"
+            android:paddingHorizontal="12dp"
+            android:textSize="13sp"
+            android:inputType="textUri" />
+
+        <Button
+            android:id="@+id/btnConnect"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="Connect"
+            android:backgroundTint="#0284C7"
+            android:textColor="#FFFFFF"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <!-- Connection & Operational Status -->
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Status: Connecting…"
+        android:textColor="#38BDF8"
+        android:textSize="14sp"
+        android:padding="12dp"
+        android:background="#1E293B"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Real-Time Hazard Alert Box (Spoken by TTS & Felt by Haptics) -->
+    <TextView
+        android:id="@+id/tvLatestAlert"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text="No immediate hazards. Path clear."
+        android:textColor="#F8FAFC"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:padding="16dp"
+        android:background="#1E293B"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Transcript Box -->
+    <TextView
+        android:id="@+id/tvTranscript"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Tap Start Listening or press Volume Down to speak."
+        android:textColor="#CBD5E1"
+        android:textSize="15sp"
+        android:padding="12dp"
+        android:background="#020617"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Primary Action: Start Listening -->
+    <Button
+        android:id="@+id/btnListen"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:text="Start Listening"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#082F49"
+        android:backgroundTint="#38BDF8"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Secondary Action: Describe Surroundings -->
+    <Button
+        android:id="@+id/btnDescribe"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="Describe Surroundings"
+        android:textSize="16sp"
+        android:textColor="#064E3B"
+        android:backgroundTint="#A7F3D0" />
+
+</LinearLayout>

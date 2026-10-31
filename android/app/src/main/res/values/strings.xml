@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">NAVIS</string>
+    <string name="status_connected">Connected to NAVIS AI Backend</string>
+    <string name="status_disconnected">Disconnected from NAVIS Backend</string>
+    <string name="status_listening">Listening for voice command…</string>
+    <string name="btn_start_listening">Start Listening</string>
+    <string name="btn_stop_listening">Stop Listening</string>
+    <string name="btn_describe_scene">Describe Surroundings</string>
+    <string name="btn_read_text">Read Text / Sign</string>
+    <string name="prompt_wake_phrase">Say "Hello NAVIS" or tap anywhere to ask a question</string>
+    <string name="default_backend_url">http://10.0.2.2:8000</string>
+    <string name="detect_endpoint">/api/detect</string>
+</resources>

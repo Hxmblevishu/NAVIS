@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <style>__LEAFLET_CSS__</style>
+  <style>
+    html, body, #map { width: 100%; height: 100%; margin: 0; background: #e7ede8; }
+    body { overflow: hidden; font-family: system-ui, sans-serif; }
+    #map-message {
+      position: absolute; z-index: 1000; left: 50%; top: 12px; transform: translateX(-50%);
+      max-width: calc(100% - 36px); padding: 7px 11px; border-radius: 10px;
+      color: #17332e; background: rgba(255,255,255,.94); box-shadow: 0 2px 12px #183b3026;
+      text-align: center; font: 12px/1.35 system-ui, sans-serif;
+    }
+    .navis-location-marker {
+      width: 18px; height: 18px; border: 3px solid #fff; border-radius: 50%;
+      background: #087f8c; box-shadow: 0 1px 7px #102a2d99;
+    }
+    .leaflet-control-attribution { font-size: 10px !important; }
+    .leaflet-container { outline: none; }
+  </style>
+</head>
+<body>
+  <div id="map" aria-label="Pedestrian map"></div>
+  <div id="map-message">Loading the Dehradun map…</div>
+  <script>__LEAFLET_JS__</script>
+  <script>
+    (() => {
+      const message = document.getElementById('map-message');
+      const map = L.map('map', { zoomControl: true, scrollWheelZoom: true, tap: true })
+        .setView([30.3165, 78.0322], 13);
+      const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+      }).addTo(map);
+      let hasTiles = false;
+      let locationMarker = null;
+      let routeLine = null;
+      let tileFailures = 0;
+      const reportMapStatus = (status) => {
+        try { window.NavisMapBridge.onStatus(status); } catch (_) { /* Native status overlay is optional. */ }
+      };
+      tiles.on('tileload', () => {
+        hasTiles = true; tileFailures = 0; message.hidden = true; reportMapStatus('ready');
+      });
+      tiles.on('tileerror', () => {
+        tileFailures += 1;
+        if (!hasTiles && tileFailures >= 2) {
+          message.textContent = 'Map tiles are unavailable. Check the phone’s internet connection.';
+          message.hidden = false;
+          reportMapStatus('offline');
+        }
+      });
+      setTimeout(() => { if (!hasTiles && tileFailures < 2) reportMapStatus('loading'); }, 3500);
+      map.on('click', () => { if (hasTiles) message.hidden = true; });
+
+      function decodePolyline(encoded) {
+        const points = [];
+        let index = 0, latitude = 0, longitude = 0;
+        while (index < encoded.length) {
+          let result = 0, shift = 0, value;
+          do { value = encoded.charCodeAt(index++) - 63; result |= (value & 31) << shift; shift += 5; } while (value >= 32);
+          latitude += (result & 1) ? ~(result >> 1) : (result >> 1);
+          result = 0; shift = 0;
+          do { value = encoded.charCodeAt(index++) - 63; result |= (value & 31) << shift; shift += 5; } while (value >= 32);
+          longitude += (result & 1) ? ~(result >> 1) : (result >> 1);
+          points.push([latitude / 1e5, longitude / 1e5]);
+        }
+        return points;
+      }
+
+      window.navisSetState = (state) => {
+        if (typeof state === 'string') state = JSON.parse(state);
+        const location = state.location;
+        if (location && Number.isFinite(location.latitude) && Number.isFinite(location.longitude)) {
+          const point = [location.latitude, location.longitude];
+          if (!locationMarker) {
+            locationMarker = L.marker(point, {
+              icon: L.divIcon({ className: 'navis-location-marker', iconSize: [24, 24], iconAnchor: [12, 12] }),
+              title: 'Your current location'
+            }).addTo(map);
+          } else locationMarker.setLatLng(point);
+        }
+        if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+        if (state.polyline) {
+          try {
+            const points = decodePolyline(state.polyline);
+            if (points.length > 1) {
+              routeLine = L.polyline(points, { color: '#087f8c', weight: 6, opacity: .95, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+            }
+          } catch (_) { /* Keep the usable base map if the backend route is malformed. */ }
+        }
+        if (!hasTiles && tileFailures < 2) {
+          message.textContent = 'Loading the Dehradun map…';
+          message.hidden = false;
+        }
+        map.invalidateSize({ pan: false });
+      };
+      setTimeout(() => map.invalidateSize({ pan: false }), 150);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+rootProject.name = "NAVIS"
+include(":app")
